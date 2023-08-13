@@ -1,0 +1,86 @@
+import logging.config
+from typing import List
+
+from pydantic import Field
+from pydantic_settings import BaseSettings
+from aiogram import Bot, Dispatcher
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.pool import NullPool
+
+
+class Config(BaseSettings):
+    BOT_TOKEN: str = Field(...)
+    TELEGRAM_SECURITY_TOKEN: str = Field(...)
+    GOOGLE_SECURITY_TOKEN: str = Field(...)
+    ADMIN_IDS: List = Field(...)
+    DB_NAME: str = Field(...)
+    APP_BASE_URL: str = Field(...)
+    PROJECT_FIELD: str = Field(...)
+    USERNAME_FIELD: str = Field(...)
+    RABBITMQ_USER: str = Field(...)
+    RABBITMQ_PASSWORD: str = Field(...)
+    RABBITMQ_VHOST: str = Field(...)
+
+    @property
+    def RABBITMQ_URL(self):
+        return f'amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@localhost:5672/{self.RABBITMQ_VHOST}'
+
+
+config = Config(_env_file=".env", _env_file_encoding="utf-8")
+
+engine = create_async_engine(
+    f"sqlite+aiosqlite:///./{config.DB_NAME}.db",
+    future=True,
+    poolclass=NullPool,
+)
+async_sessionmaker = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
+bot = Bot(token=config.BOT_TOKEN, parse_mode="HTML")
+dispatcher = Dispatcher()
+logging_dict = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "file_formatter": {
+            "format": "{asctime} — {levelname} — {name} — {module}:{funcName}:{lineno} — {message}",
+            "datefmt": "[%d/%m/%Y] — %H:%M:%S",
+            "style": "{",
+        },
+        "console_formatter": {
+            "format": "{asctime} — {levelname} — {name} — {message}",
+            "datefmt": "[%d/%m/%Y] — %H:%M",
+            "style": "{",
+        },
+        "telegram_formatter": {
+            "format": "{levelname} — {module}:{funcName}:{lineno} — {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "console_formatter",
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "server.log",
+            "formatter": "file_formatter",
+        },
+    },
+    "loggers": {
+        "app_logger": {
+            "level": "DEBUG",
+            "handlers": ["console", "file"],
+            "propagate": False,
+        }
+    },
+    "root": {
+        "level": "DEBUG",
+        "handlers": ["console", "file"],
+    },
+}
+logging.config.dictConfig(logging_dict)
