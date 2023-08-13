@@ -47,6 +47,6 @@ async def receive_form_data_handler(request: Request):
         await session.merge(Form(
             status=1, username=username, destination=project_name, content=msg, telegram_message_id=sent_message.message_id))
         await session.commit()
-    logging.info(f"Message has been successfully sent to a project with name {project_name}")
+    logging.info(f"Message has been successfully sent to a project with name <{project_name}>")
     return json_response({"ok": True}, status=200)
 

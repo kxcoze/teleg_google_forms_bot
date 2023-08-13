@@ -23,8 +23,6 @@ def api_authentication(func):
 def admin_authentication(func):
     async def wrapped(*args, **kwargs):
         message: Message = args[0]
-        db_session: sessionmaker = kwargs['db_session']
-        # async with db_session() as session:
         if message.chat.id not in config.ADMIN_IDS:
             return
         return await func(*args, **kwargs)

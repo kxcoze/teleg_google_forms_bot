@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, Router
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.pool import NullPool
@@ -39,6 +39,7 @@ async_sessionmaker = sessionmaker(
 )
 bot = Bot(token=config.BOT_TOKEN, parse_mode="HTML")
 dispatcher = Dispatcher()
+
 logging_dict = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -60,7 +61,7 @@ logging_dict = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "class": "logging.StreamHandler",
             "formatter": "console_formatter",
         },
@@ -70,17 +71,26 @@ logging_dict = {
             "filename": "server.log",
             "formatter": "file_formatter",
         },
+        "telegram": {
+            "level": "ERROR",
+            "class": "aiolog.telegram.Handler",
+            "formatter": "telegram_formatter",
+            "timeout": 10,  # 60 by default
+            "queue_size": 100,  # 1000 by default
+            "token": config.BOT_TOKEN,
+            "chats": ", ".join([str(e) for e in config.ADMIN_IDS]),
+        }
     },
     "loggers": {
         "app_logger": {
-            "level": "DEBUG",
+            "level": "INFO",
             "handlers": ["console", "file"],
             "propagate": False,
         }
     },
     "root": {
-        "level": "DEBUG",
-        "handlers": ["console", "file"],
+        "level": "INFO",
+        "handlers": ["console", "file", "telegram"],
     },
 }
 logging.config.dictConfig(logging_dict)

@@ -1,21 +1,21 @@
-import re
+import pytz
 from typing import List
 
 from aiogram import types
 from aiogram.filters.callback_data import CallbackData
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from async_property import async_property
 from sqlalchemy import select
 
-from db.models import User, Form
+from db.models import Form
 
 
-class ListCallbackData(CallbackData, prefix="page"):
+class FormCallbackData(CallbackData, prefix="page"):
     name: str
-    id: str | int
+    form_id: int | None
     page_num: int
+    pos: int | None
     action: str
-    # page:<name>:<id>:<page_num>:<action>
+    # page:<name>:<id>:<page_num>:<pos>:<action>
 
 
 class Pagination:
@@ -75,27 +75,29 @@ class Pagination:
             menu.append(
                 types.InlineKeyboardButton(
                     text="«",
-                    callback_data=ListCallbackData(
-                        name="reports", id="-", page_num=cur_page - 1, action="prev"
+                    callback_data=FormCallbackData(
+                        name="reports", form_id=-1, page_num=cur_page - 1, pos=-1, action="prev"
                     ).pack(),
                 )
             )
         pages = await self.pages
         if pages:
             text = "<b>Отчеты</b>\n"
-            reports = pages[left:right]
-            for ind, form in enumerate(reports, start=left + 1):
+            forms = pages[left:right]
+            for pos, form in enumerate(forms, start=left + 1):
+                formatted_time = pytz.utc.localize(
+                    form.created_at, is_dst=None).astimezone(pytz.timezone('Europe/Moscow'))
                 text += (
-                    f"№ {ind}\n"
+                    f"№ {pos}\n"
                     f"ФИО: <b>{form.username}</b>\n"
                     f"Проект: <b>{form.destination}</b>\n"
-                    f"Отметка времени: <b>{form.created_at.strftime('%H:%M:%S, %d.%m.%Y')}</b>\n\n"
+                    f"Отметка времени: <b>{formatted_time.strftime('%H:%M:%S, %d/%m/%Y')}</b>\n\n"
                 )
                 menu.append(
                     types.InlineKeyboardButton(
-                        text=str(ind),
-                        callback_data=ListCallbackData(
-                            name="reports", id=form.id, page_num=cur_page, action="view"
+                        text=str(pos),
+                        callback_data=FormCallbackData(
+                            name="reports", form_id=form.id, page_num=cur_page, pos=pos, action="view"
                         ).pack(),
                     )
                 )
@@ -107,8 +109,8 @@ class Pagination:
             menu.append(
                 types.InlineKeyboardButton(
                     text="»",
-                    callback_data=ListCallbackData(
-                        name="reports", id="-", page_num=cur_page + 1, action="next"
+                    callback_data=FormCallbackData(
+                        name="reports", form_id=-1, page_num=cur_page + 1, pos=-1, action="next"
                     ).pack(),
                 )
             )
@@ -117,31 +119,24 @@ class Pagination:
 
         return text, markup
 
-    async def view_data_element(self, cur_page, ind):
-        pages = await self.pages
-        form = pages[ind]
+    async def view_data_element(self, cur_page: int, form_id: int, pos: int):
+        async with self.db_session() as session:
+            form = await session.get(Form, form_id)
+
         text = "".join(
-            f"№ {ind + 1}\n"
+            f"№ {pos}\n"
             f"{form.content}"
         )
 
         button = types.InlineKeyboardButton(
             text="« Вернуться назад",
-            callback_data=ListCallbackData(
-                name="reports", id="-", page_num=cur_page, action="main"
+            callback_data=FormCallbackData(
+                name="reports", form_id=form.id, page_num=cur_page, pos=pos, action="main"
             ).pack(),
         )
 
-        markup = types.InlineKeyboardMarkup(inline_keyboard=[button])
+        markup = types.InlineKeyboardMarkup(inline_keyboard=[[button]])
         return text, markup
-
-    # @abstractmethod
-    # async def delete_data_element_by_num(self, ind):
-    #     pass
-    #
-    # @abstractmethod
-    # async def delete_data_element_by_info(self, data, ind):
-    #     pass
 
     @staticmethod
     def back_to_main(cur_page, book):
@@ -150,8 +145,8 @@ class Pagination:
         markup.add(
             types.InlineKeyboardButton(
                 text="« Вернуться назад",
-                callback_data=ListCallbackData(
-                    name=book, id="-", page_num=cur_page, action="main"
+                callback_data=FormCallbackData(
+                    name=book, form_id=None, page_num=cur_page, pos=None, action="main"
                 ).pack(),
             ),
         )

@@ -3,23 +3,20 @@ from typing import Any, List
 
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Message,
-)
+from aiogram.types import Message
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 
 from src.utils.decorators import admin_authentication
 from src.classes.pagination import Pagination
-from db.models import Chat, User, Form
 
-my_router = Router()
+from db.models import Chat, User
+
+router = Router()
 
 
-@my_router.message(Command(commands=["start"]))
+@router.message(Command(commands=["start"]))
 async def command_start(message: Message, db_session: sessionmaker):
     async with db_session() as session:
         user: User = await session.get(User, message.chat.id)
@@ -30,7 +27,18 @@ async def command_start(message: Message, db_session: sessionmaker):
     await message.answer(f"""Привет!\nВаш айди: <b>{message.chat.id}</b>\n{additional_message}""")
 
 
-@my_router.message(Command(commands=["admins"]))
+@router.message(Command(commands=["help"]))
+@admin_authentication
+async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
+    await message.answer(
+        "<b><em>Список всех команд</em></b>\n"
+        "/admins - посмотреть ID админов \n"
+        "/groups - посмотреть группы, где состоит бот \n"
+        "/reports - интерфейс для просмотра последних отчетов (до 300-х отчетов) \n"
+    )
+
+
+@router.message(Command(commands=["admins"]))
 @admin_authentication
 async def command_check_admin(message: Message, db_session: sessionmaker, **kwargs):
     async with db_session() as session:
@@ -42,17 +50,7 @@ async def command_check_admin(message: Message, db_session: sessionmaker, **kwar
     await message.answer("\n".join(msg))
 
 
-# @my_router.message(Command(commands=["reports"]))
-# @admin_authentication
-# async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
-#     async with db_session() as session:
-#         rows = await session.execute(select(Form).order_by(Form.created_at).limit(5))
-#         forms: List[Form] = rows.scalars().all()
-#     for form in forms:
-#         pass
-
-
-@my_router.message(Command(commands=["groups"]))
+@router.message(Command(commands=["groups"]))
 @admin_authentication
 async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
     async with db_session() as session:
@@ -64,18 +62,18 @@ async def command_last_report(message: Message, db_session: sessionmaker, **kwar
     await message.answer('\n'.join(msg))
 
 
-@my_router.message(Command(commands=["reports"]))
+@router.message(Command(commands=["reports"]))
 @admin_authentication
 async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
     reports_pagination = Pagination(db_session)
     text, markup = await reports_pagination.show_page()
-    return await message.answer(
+    await message.answer(
         text=text,
         reply_markup=markup,
     )
 
 
-@my_router.message(F.new_chat_member)
+@router.message(F.new_chat_member)
 async def joined_chat_handler(message: Message, bot: Bot, db_session: sessionmaker) -> Any:
     if message.new_chat_member['id'] != bot.id:
         return
@@ -93,7 +91,7 @@ async def joined_chat_handler(message: Message, bot: Bot, db_session: sessionmak
     logging.info(f'joined <{chat_title}> with id: {chat_id}')
 
 
-@my_router.message(F.left_chat_member)
+@router.message(F.left_chat_member)
 async def left_chat_handler(message: Message, bot: Bot, db_session: sessionmaker) -> Any:
     if message.left_chat_member.id != bot.id:
         return
