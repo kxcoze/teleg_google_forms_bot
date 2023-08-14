@@ -24,7 +24,7 @@ class Config(BaseSettings):
 
     @property
     def RABBITMQ_URL(self):
-        return f'amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@localhost:5672/{self.RABBITMQ_VHOST}'
+        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@localhost:5672/{self.RABBITMQ_VHOST}"
 
 
 config = Config(_env_file=".env", _env_file_encoding="utf-8")
@@ -34,9 +34,7 @@ engine = create_async_engine(
     future=True,
     poolclass=NullPool,
 )
-async_sessionmaker = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
-)
+async_sessionmaker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 bot = Bot(token=config.BOT_TOKEN, parse_mode="HTML")
 dispatcher = Dispatcher()
 
@@ -55,13 +53,13 @@ logging_dict = {
             "style": "{",
         },
         "telegram_formatter": {
-            "format": "{levelname} — {module}:{funcName}:{lineno} — {message}",
+            "format": "{levelname} — {message}",
             "style": "{",
         },
     },
     "handlers": {
         "console": {
-            "level": "WARNING",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "console_formatter",
         },
@@ -72,14 +70,14 @@ logging_dict = {
             "formatter": "file_formatter",
         },
         "telegram": {
-            "level": "ERROR",
+            "level": "WARNING",
             "class": "aiolog.telegram.Handler",
             "formatter": "telegram_formatter",
             "timeout": 10,  # 60 by default
             "queue_size": 100,  # 1000 by default
             "token": config.BOT_TOKEN,
             "chats": ", ".join([str(e) for e in config.ADMIN_IDS]),
-        }
+        },
     },
     "loggers": {
         "app_logger": {

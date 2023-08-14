@@ -24,44 +24,29 @@ class Pagination:
     def __init__(self, db_session):
         self.db_session = db_session
 
+    @async_property
+    async def pages(self):
+        async with self.db_session() as session:
+            rows = await session.execute(
+                select(Form)
+                .where(Form.status == 1)
+                .order_by(Form.created_at.desc())
+                .limit(300)
+            )
+            forms: List[Form] = rows.scalars().all()
+        return forms
+
     async def search_nonempty_page(self, left, right, cur_page=0):
         searched_page = cur_page
-        pages = (await self.pages)[left:right]
-        while searched_page > 0 and pages:
+        pages = await self.pages
+        while searched_page > 0 and not pages[left:right]:
             right -= self.WIDTH
             left -= self.WIDTH
             searched_page -= 1
 
         return left, right, searched_page
 
-    async def check_existing_data(self, checked_data: List, ind):
-        last_index = -1
-        pages = await self.pages
-        for index, data in enumerate(pages):
-            if data == checked_data:
-                if index == ind:
-                    return ind
-                last_index = index
-
-        return last_index
-
-    @async_property
-    async def pages(self):
-        async with self.db_session() as session:
-            rows = await session.execute(select(Form)
-                                         .where(Form.status == 1)
-                                         .order_by(Form.created_at.desc())
-                                         .limit(300)
-                                         )
-            forms: List[Form] = rows.scalars().all()
-        return forms
-
-    # @abstractmethod
-    # async def append_data(self, data1, data2, pos=0):
-    #     pass
-
     async def show_page(self, cur_page=0):
-
         menu = []
         left = cur_page * self.WIDTH
         right = cur_page * self.WIDTH + self.WIDTH
@@ -76,7 +61,11 @@ class Pagination:
                 types.InlineKeyboardButton(
                     text="«",
                     callback_data=FormCallbackData(
-                        name="reports", form_id=-1, page_num=cur_page - 1, pos=-1, action="prev"
+                        name="reports",
+                        form_id=-1,
+                        page_num=cur_page - 1,
+                        pos=-1,
+                        action="prev",
                     ).pack(),
                 )
             )
@@ -86,7 +75,8 @@ class Pagination:
             forms = pages[left:right]
             for pos, form in enumerate(forms, start=left + 1):
                 formatted_time = pytz.utc.localize(
-                    form.created_at, is_dst=None).astimezone(pytz.timezone('Europe/Moscow'))
+                    form.created_at, is_dst=None
+                ).astimezone(pytz.timezone("Europe/Moscow"))
                 text += (
                     f"№ {pos}\n"
                     f"ФИО: <b>{form.username}</b>\n"
@@ -97,7 +87,11 @@ class Pagination:
                     types.InlineKeyboardButton(
                         text=str(pos),
                         callback_data=FormCallbackData(
-                            name="reports", form_id=form.id, page_num=cur_page, pos=pos, action="view"
+                            name="reports",
+                            form_id=form.id,
+                            page_num=cur_page,
+                            pos=pos,
+                            action="view",
                         ).pack(),
                     )
                 )
@@ -110,7 +104,11 @@ class Pagination:
                 types.InlineKeyboardButton(
                     text="»",
                     callback_data=FormCallbackData(
-                        name="reports", form_id=-1, page_num=cur_page + 1, pos=-1, action="next"
+                        name="reports",
+                        form_id=-1,
+                        page_num=cur_page + 1,
+                        pos=-1,
+                        action="next",
                     ).pack(),
                 )
             )
@@ -123,15 +121,16 @@ class Pagination:
         async with self.db_session() as session:
             form = await session.get(Form, form_id)
 
-        text = "".join(
-            f"№ {pos}\n"
-            f"{form.content}"
-        )
+        text = "".join(f"№ {pos}\n" f"{form.content}")
 
         button = types.InlineKeyboardButton(
             text="« Вернуться назад",
             callback_data=FormCallbackData(
-                name="reports", form_id=form.id, page_num=cur_page, pos=pos, action="main"
+                name="reports",
+                form_id=form.id,
+                page_num=cur_page,
+                pos=pos,
+                action="main",
             ).pack(),
         )
 

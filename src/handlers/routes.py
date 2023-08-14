@@ -28,25 +28,55 @@ async def receive_form_data_handler(request: Request):
 
     async with db_session() as session:
         try:
-            row = await session.execute(select(Chat.id).where(Chat.name == project_name))
+            row = await session.execute(
+                select(Chat.id).where(Chat.name == project_name)
+            )
             chat_id = row.scalar_one()
-        except NoResultFound:  # Указана недействительная группа, либо же бот не добавлен в чат
-            await session.merge(Form(status=-1, username=username, destination=project_name, content=msg))
+        except (
+            NoResultFound
+        ):  # Указана недействительная группа, либо же бот не добавлен в чат
+            await session.merge(
+                Form(
+                    status=-1, username=username, destination=project_name, content=msg
+                )
+            )
             await session.commit()
-            logging.error(f"There is no such group with name <{project_name}> for sending messages.")
-            return json_response({"ok": False, "err": f"There is no such group for sending messages."}, status=400)
+            logging.error(
+                f"Такой группы нет <{project_name}> для отправки сообщения пользователя {username}."
+            )
+            return json_response(
+                {"ok": False, "err": f"There is no such group for sending messages."},
+                status=400,
+            )
 
         try:
             sent_message = await bot.send_message(text=msg, chat_id=chat_id)
         except Exception as e:  # При попытке отправить в чат произошла ошибка
-            await session.merge(Form(status=-1, username=username, destination=project_name, content=msg))
+            await session.merge(
+                Form(
+                    status=-1, username=username, destination=project_name, content=msg
+                )
+            )
             await session.commit()
-            logging.error(f"Cannot complete messaging because: {e}")
-            return json_response({"ok": False, "err": f"Cannot complete the request because: {e}"}, status=500)
+            logging.error(
+                f"Не могу завершить отправку сообщения пользователя <{username}> из-за данной ошибки: {e}"
+            )
+            return json_response(
+                {"ok": False, "err": f"Cannot complete the request because: {e}"},
+                status=500,
+            )
         # Сообщение успешно отправлено.
-        await session.merge(Form(
-            status=1, username=username, destination=project_name, content=msg, telegram_message_id=sent_message.message_id))
+        await session.merge(
+            Form(
+                status=1,
+                username=username,
+                destination=project_name,
+                content=msg,
+                telegram_message_id=sent_message.message_id,
+            )
+        )
         await session.commit()
-    logging.info(f"Message has been successfully sent to a project with name <{project_name}>")
+    logging.warning(
+        f"Отчет пользователя <{username}> был успешно отправлен в <{project_name}>!"
+    )
     return json_response({"ok": True}, status=200)
-

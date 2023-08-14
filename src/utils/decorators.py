@@ -11,8 +11,8 @@ from src.config import config
 def api_authentication(func):
     async def wrapped(*args, **kwargs):
         request: Request = args[0]
-        if request.headers['security_token'] != config.GOOGLE_SECURITY_TOKEN:
-            logging.error('Someone trying to bypass API authentication!')
+        if request.headers["security_token"] != config.GOOGLE_SECURITY_TOKEN:
+            logging.error("Неправильный токен безопасности в форме Google Form!")
             return json_response({"ok": False, "err": "Unauthorized"}, status=401)
 
         return await func(*args, **kwargs)
@@ -26,4 +26,5 @@ def admin_authentication(func):
         if message.chat.id not in config.ADMIN_IDS:
             return
         return await func(*args, **kwargs)
+
     return wrapped

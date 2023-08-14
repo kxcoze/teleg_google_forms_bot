@@ -4,17 +4,16 @@ from contextlib import suppress
 
 from aiogram import Router, types, F, Bot
 from aiogram.filters.exception import ExceptionMessageFilter
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import User
 from src.config import async_sessionmaker
 from src.classes.pagination import Pagination, FormCallbackData
 
 callback_router = Router()
 
 
-@callback_router.callback_query(FormCallbackData.filter(F.action.in_({"prev", "main", "next"})))
+@callback_router.callback_query(
+    FormCallbackData.filter(F.action.in_({"prev", "main", "next"}))
+)
 async def query_show_initial_page(
     query: types.CallbackQuery, callback_data: FormCallbackData, bot: Bot, **kwargs
 ):
@@ -39,7 +38,7 @@ async def query_show_report_info(
 
     try:
         text, markup = await user_book.view_data_element(cur_page, form_id, pos)
-        with suppress(ExceptionMessageFilter('MessageNotModified')):
+        with suppress(ExceptionMessageFilter("MessageNotModified")):
             await query.message.edit_text(text, reply_markup=markup)
         await query.answer()
     except:
@@ -48,4 +47,3 @@ async def query_show_report_info(
             f"user ID:[{query.message.chat.id}]"
         )
         await query.answer("Произошла непредвиденная ошибка.")
-

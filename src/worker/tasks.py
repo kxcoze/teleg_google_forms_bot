@@ -11,41 +11,49 @@ from db.models import Form, Chat
 
 
 async def send_error_message_admins(msg):
+    msg = ''.join(['<code>ERROR — </code>', msg])
     for admin in config.ADMIN_IDS:
         await bot.send_message(admin, msg)
 
 
 async def send_not_delivered_messages():
-    logging.info('Doing some business here...')
     async with db_session() as session:
         rows_msg = await session.execute(select(Form).where(Form.status.in_((-1, 0))))
         forms = rows_msg.scalars().all()
         for form in forms:
             try:
                 row_chat_id = await session.execute(
-                    select(Chat.id).where(Chat.name == form.destination))
+                    select(Chat.id).where(Chat.name == form.destination)
+                )
                 chat_id = row_chat_id.scalar_one()
-            except NoResultFound:  # Указана недействительная группа, либо же бот не добавлен в чат
+            except (
+                NoResultFound
+            ):  # Указана недействительная группа, либо же бот не добавлен в чат
                 await send_error_message_admins(
-                    f"При отправке сообщения под номером <b>{form.id}</b> произошла ошибка! \n"
+                    f"При отправке отчета <b>{form.username}</b> произошла ошибка! \n"
                     f"Бот не добавлен в групповой чат <b>{form.destination}</b> \n"
                     f"Проверьте список групп бота с помощью команды: /groups \n"
                 )
                 logging.error(
                     f"There is still no such group with name <{form.destination}> so message with id: {form.id} "
-                    f"cannot be sent!")
+                    f"cannot be sent!"
+                )
                 continue
 
             try:
-                sent_message = await bot.send_message(text=form.content, chat_id=chat_id)
+                sent_message = await bot.send_message(
+                    text=form.content, chat_id=chat_id
+                )
                 await asyncio.sleep(2)
             except Exception as e:  # При попытке отправить в чат произошла ошибка
                 await send_error_message_admins(
-                    f"При попытке отправить сообщение под номером <b>{form.id}</b>, в чат <b>{form.destination}</b> "
-                    f"произошла ошибка! \n"
-                    f"Вот текст ошибки: {e} \n")
-                logging.error(f"Cannot complete messaging to group with name <{form.destination}> for message with "
-                              f"id:{form.id} because: {e}")
+                    f"При попытке отправить отчет <b>{form.username}</b>, в чат <b>{form.destination}</b> "
+                    f"произошла ошибка! \nВот текст ошибки: {e} \n"
+                )
+                logging.error(
+                    f"Cannot complete messaging to group with name <{form.destination}> for message with "
+                    f"id:{form.id} because: {e}"
+                )
                 continue
 
             # Сообщение успешно отправлено.
@@ -54,12 +62,11 @@ async def send_not_delivered_messages():
             await session.merge(form)
             await session.commit()
             await send_error_message_admins(
-                f"Сообщение под номером <b>{form.id}</b> было успешно отправлено в чат <b>{form.destination}</b>! \n"
+                f"Отчет <b>{form.username}</b> был успешно отправлен в чат <b>{form.destination}</b>! \n"
             )
             logging.warning(
-                f"Message with id: {form.id} has been successfully sent to the group <{form.destination}>")
-
-    logging.info('Work has been ended.')
+                f"Message with id: {form.id} has been successfully sent to the group <{form.destination}>"
+            )
 
 
 @app.task

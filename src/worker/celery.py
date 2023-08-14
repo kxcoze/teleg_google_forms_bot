@@ -7,7 +7,11 @@ from src.config import config
 
 celery_event_loop = asyncio.new_event_loop()
 
-celery_app = Celery(main="telegram_bot", broker=config.RABBITMQ_URL, broker_connection_retry_on_startup=True)
+celery_app = Celery(
+    main="telegram_bot",
+    broker=config.RABBITMQ_URL,
+    broker_connection_retry_on_startup=True,
+)
 celery_app.autodiscover_tasks()
 celery_app.conf.beat_schedule = {
     "add-every-minute": {

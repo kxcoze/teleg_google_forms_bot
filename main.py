@@ -15,7 +15,9 @@ from db.models import Base, User
 
 
 async def on_startup(bot: Bot, base_url: str):
-    await bot.set_webhook(f"{base_url}/webhook", secret_token=config.TELEGRAM_SECURITY_TOKEN)
+    await bot.set_webhook(
+        f"{base_url}/webhook", secret_token=config.TELEGRAM_SECURITY_TOKEN
+    )
 
 
 async def db_init():
@@ -53,14 +55,11 @@ async def main():
 
     app.router.add_post("/form", receive_form_data_handler)
     SimpleRequestHandler(
-        dispatcher=dispatcher,
-        bot=bot,
-        secret_token=config.TELEGRAM_SECURITY_TOKEN
+        dispatcher=dispatcher, bot=bot, secret_token=config.TELEGRAM_SECURITY_TOKEN
     ).register(app, path="/webhook")
 
-    # await notify_admins()
     aiolog.setup_aiohttp(app)
-    logging.warning("Бот запущен и готов к получению форм!")
+    logging.error("Бот запущен и готов к получению форм!")
     setup_application(app, dispatcher, bot=bot)
 
     return app

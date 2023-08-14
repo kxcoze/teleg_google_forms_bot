@@ -1,7 +1,15 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import (
+    Column,
+    Integer,
+    BigInteger,
+    String,
+    Boolean,
+    ForeignKey,
+    DateTime,
+)
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy_utils.types.choice import ChoiceType
 
@@ -26,13 +34,13 @@ class Chat(Base):
 
 class StatusType(Enum):
     received = 0  # Принято - триггер сработал и данные формы были получены сервером
-    sent = 1      # Отправлено - сервер успешно отправил в групповой чат сообщение
-    error = -1    # Ошибка - при отправке сообщения произошла ошибка
+    sent = 1  # Отправлено - сервер успешно отправил в групповой чат сообщение
+    error = -1  # Ошибка - при отправке сообщения произошла ошибка
 
 
-StatusType.received.label = 'получено'
-StatusType.sent.label = 'отправлено'
-StatusType.error.label = 'ошибка'
+StatusType.received.label = "получено"
+StatusType.sent.label = "отправлено"
+StatusType.error.label = "ошибка"
 
 
 class Form(Base):
