@@ -1,6 +1,6 @@
 import asyncio
 
-from celery import Celery, signals
+from celery import Celery
 from celery.schedules import crontab
 
 from src.config import config
@@ -14,9 +14,13 @@ celery_app = Celery(
 )
 celery_app.autodiscover_tasks()
 celery_app.conf.beat_schedule = {
-    "add-every-minute": {
+    "add-every-5-minutes": {
         "task": "src.worker.tasks.test_task",
-        "schedule": crontab(),
+        "schedule": crontab(minute="*/5", hour="6-23"),
+    },
+    "add-every-monday-clear-old-reports": {
+        "task": "src.worker.tasks.clear_old_forms_task",
+        "schedule": crontab(minute="0", hour="0", day_of_week="1"),
     },
 }
 celery_app.conf.update(timezone="Europe/Moscow")

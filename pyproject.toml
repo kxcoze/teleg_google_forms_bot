@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "teleg-google-forms-bot"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "teleg_google_forms_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiogram = {git = "https://github.com/aiogram/aiogram.git", rev = "649f76b5f6f8997984e9dea482f87f66f9870785"}
+celery = "^5.3.1"
+async-property = "^0.2.2"
+SQLAlchemy = "^2.0.19"
+amqp = "^5.1.1"
+aiolog = {git = "https://github.com/kxcoze/aiolog.git", rev = "abdea603fb716962d6286a46739a36483378aa2f"}
+pydantic-settings = "^2.0.3"
+pydantic = "^2.1.1"
+aiosqlite = "^0.19.0"
+aio-pika = "^9.2.2"
+sqlalchemy-utils = "^0.41.1"
+pytz = "^2023.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

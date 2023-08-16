@@ -14,23 +14,25 @@ class Config(BaseSettings):
     TELEGRAM_SECURITY_TOKEN: str = Field(...)
     GOOGLE_SECURITY_TOKEN: str = Field(...)
     ADMIN_IDS: List = Field(...)
+    EMAIL: str = Field(...)
     DB_NAME: str = Field(...)
     APP_BASE_URL: str = Field(...)
     PROJECT_FIELD: str = Field(...)
     USERNAME_FIELD: str = Field(...)
+    EXPIRES_DAYS: int = Field(...)
     RABBITMQ_USER: str = Field(...)
-    RABBITMQ_PASSWORD: str = Field(...)
+    RABBITMQ_PASS: str = Field(...)
     RABBITMQ_VHOST: str = Field(...)
 
     @property
     def RABBITMQ_URL(self):
-        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@localhost:5672/{self.RABBITMQ_VHOST}"
+        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASS}@rabbitmq:5672/{self.RABBITMQ_VHOST}"
 
 
 config = Config(_env_file=".env", _env_file_encoding="utf-8")
 
 engine = create_async_engine(
-    f"sqlite+aiosqlite:///./{config.DB_NAME}.db",
+    f"sqlite+aiosqlite:///./{config.DB_NAME}.sqlite3",
     future=True,
     poolclass=NullPool,
 )

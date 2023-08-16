@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -14,6 +15,13 @@ async def send_error_message_admins(msg):
     msg = ''.join(['<code>ERROR — </code>', msg])
     for admin in config.ADMIN_IDS:
         await bot.send_message(admin, msg)
+
+
+async def send_warning_message_admins(msg):
+    msg = ''.join(['<code>WARNING — </code>', msg])
+    for admin in config.ADMIN_IDS:
+        await bot.send_message(admin, msg)
+
 
 
 async def send_not_delivered_messages():
@@ -61,7 +69,7 @@ async def send_not_delivered_messages():
             form.telegram_message_id = sent_message.message_id
             await session.merge(form)
             await session.commit()
-            await send_error_message_admins(
+            await send_warning_message_admins(
                 f"Отчет <b>{form.username}</b> был успешно отправлен в чат <b>{form.destination}</b>! \n"
             )
             logging.warning(
@@ -69,6 +77,33 @@ async def send_not_delivered_messages():
             )
 
 
+async def clear_old_forms():
+    async with db_session() as session:
+        rows = await session.execute(select(Form).where(Form.created_at >= datetime.now() + timedelta(days=config.EXPIRES_DAYS)))
+        forms = rows.scalars().all()
+        if not forms:
+            logging.warning(
+                f"Forms what older than {config.EXPIRES_DAYS} days haven't been found."
+            )
+            return
+        cnt = 0
+        for form in forms:
+            cnt += 1
+            await session.delete(form)
+        await session.commit()
+
+    await send_warning_message_admins(f"Были успешно удалены устаревшие на <b>{config.EXPIRES_DAYS}</b> дней отчеты в количестве: <b>{cnt}</b>")
+    logging.warning(
+        f"{cnt} forms have been successfully deleted due to obsolescence from db."
+    )
+
+
+
 @app.task
 def test_task() -> None:
     celery_event_loop.run_until_complete(send_not_delivered_messages())
+
+
+@app.task
+def clear_old_forms_task() -> None:
+    celery_event_loop.run_until_complete(clear_old_forms())

@@ -9,6 +9,9 @@ from src.config import config
 
 
 def api_authentication(func):
+    """
+    Декоратор для API key аутентификации
+    """
     async def wrapped(*args, **kwargs):
         request: Request = args[0]
         if request.headers["security_token"] != config.GOOGLE_SECURITY_TOKEN:
@@ -21,6 +24,9 @@ def api_authentication(func):
 
 
 def admin_authentication(func):
+    """
+    Декоратор для проверки айди пользователя на принадлежность к администрации
+    """
     async def wrapped(*args, **kwargs):
         message: Message = args[0]
         if message.chat.id not in config.ADMIN_IDS:

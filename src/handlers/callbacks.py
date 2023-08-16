@@ -4,6 +4,7 @@ from contextlib import suppress
 
 from aiogram import Router, types, F, Bot
 from aiogram.filters.exception import ExceptionMessageFilter
+from sqlalchemy.exc import NoResultFound
 
 from src.config import async_sessionmaker
 from src.classes.pagination import Pagination, FormCallbackData
@@ -17,6 +18,9 @@ callback_router = Router()
 async def query_show_initial_page(
     query: types.CallbackQuery, callback_data: FormCallbackData, bot: Bot, **kwargs
 ):
+    """
+    Query-запрос для показа страницы с определенным номером
+    """
     cur_page: int = callback_data.page_num
     reports_pagination = Pagination(async_sessionmaker)
     text, markup = await reports_pagination.show_page(cur_page)
@@ -31,6 +35,9 @@ async def query_show_initial_page(
 async def query_show_report_info(
     query: types.CallbackQuery, callback_data: FormCallbackData, bot: Bot, **kwargs
 ):
+    """
+    Query-запрос для просмотра содержимого отчета
+    """
     cur_page: int = callback_data.page_num
     form_id: int = callback_data.form_id
     pos: int = callback_data.pos
@@ -41,9 +48,14 @@ async def query_show_report_info(
         with suppress(ExceptionMessageFilter("MessageNotModified")):
             await query.message.edit_text(text, reply_markup=markup)
         await query.answer()
+    except NoResultFound:
+        logging.error("Такого отчета не существует.")
+        await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+        await query.answer("Такого отчета не существует.")
     except:
         logging.exception(
-            "Something went wrong with showing report info"
+            "Something went wrong with showing report info "
             f"user ID:[{query.message.chat.id}]"
         )
+        await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
         await query.answer("Произошла непредвиденная ошибка.")

@@ -22,10 +22,11 @@ async def command_start(message: Message, db_session: sessionmaker):
         user: User = await session.get(User, message.chat.id)
         additional_message = ""
         if user and user.is_staff:
-            additional_message = "<b>Вы админ данного бота!\n</b>"
+            additional_message = ("<b>Вы админ данного бота!</b>\n"
+                                  "/help - посмотреть список доступных команд для Вас.")
 
     await message.answer(
-        f"""Привет!\nВаш айди: <b>{message.chat.id}</b>\n{additional_message}"""
+        f"""Привет!\nВаш айди: <b>{message.chat.id}</b>\n{additional_message}\n"""
     )
 
 
@@ -43,6 +44,9 @@ async def command_last_report(message: Message, db_session: sessionmaker, **kwar
 @router.message(Command(commands=["admins"]))
 @admin_authentication
 async def command_check_admin(message: Message, db_session: sessionmaker, **kwargs):
+    """
+    Команда для проверки текущих администраторов бота.
+    """
     async with db_session() as session:
         rows = await session.execute(select(User).where(User.is_staff))
         admins = rows.scalars().all()
@@ -57,6 +61,9 @@ async def command_check_admin(message: Message, db_session: sessionmaker, **kwar
 @router.message(Command(commands=["groups"]))
 @admin_authentication
 async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
+    """
+    Команда для проверки групп, где состоит бот
+    """
     async with db_session() as session:
         rows = await session.execute(select(Chat))
         chats: List[Chat] = rows.scalars().all()
@@ -69,6 +76,9 @@ async def command_last_report(message: Message, db_session: sessionmaker, **kwar
 @router.message(Command(commands=["reports"]))
 @admin_authentication
 async def command_last_report(message: Message, db_session: sessionmaker, **kwargs):
+    """
+    Команда вызова интерфейса для просмотра отчетов
+    """
     reports_pagination = Pagination(db_session)
     text, markup = await reports_pagination.show_page()
     await message.answer(
@@ -81,6 +91,10 @@ async def command_last_report(message: Message, db_session: sessionmaker, **kwar
 async def joined_chat_handler(
     message: Message, bot: Bot, db_session: sessionmaker
 ) -> Any:
+    """
+    Событийный хендлер для добавления данных группы в БЛ при входе бота в группу или
+    при создании группы с ботом
+    """
     if hasattr(message, 'new_chat_member') and message.new_chat_member["id"] != bot.id:
         return
 
@@ -101,6 +115,9 @@ async def joined_chat_handler(
 async def left_chat_handler(
     message: Message, bot: Bot, db_session: sessionmaker
 ) -> Any:
+    """
+    Событийный хендлер для удаления группы из БД при исключения бота из группы
+    """
     if hasattr(message, "left_chat_member") and message.left_chat_member.id != bot.id:
         return
 
@@ -125,7 +142,9 @@ async def left_chat_handler(
 async def new_chat_handler(
     message: Message, bot: Bot, db_session: sessionmaker
 ) -> Any:
-
+    """
+    Событийный хендлер для отслеживания изменения названия группы
+    """
     chat_id = message.chat.id
     chat_title = message.chat.title
 
@@ -133,7 +152,8 @@ async def new_chat_handler(
         try:
             row = await session.execute(select(Chat).where(Chat.id == chat_id))
             chat = row.scalar_one()
-            logging.warning(f"Группа <{chat.name}> с айди: {chat_id} поменяла название на <{message.new_chat_title}>")
+            logging.warning(
+                    f"Группа <{chat.name}> с айди: {chat_id} поменяла название на <{message.new_chat_title}>")
             chat.name = message.new_chat_title
             await session.commit()
         except NoResultFound:
@@ -151,14 +171,18 @@ async def new_chat_handler(
 
 @router.message(F.migrate_to_chat_id)
 async def migration_to_supergroup_handler(message: Message, bot: Bot, db_session: sessionmaker):
+    """
+    Событийный хендлер для отслеживания миграции группы в супергруппу
+    """
     old_chat_id = message.chat.id
     new_chat_id = message.migrate_to_chat_id
     async with db_session() as session:
         try:
             chat = await session.get(Chat, old_chat_id)
             chat.id = new_chat_id
-            logging.warning(f"Группа <{chat.name}> была повышена до супергруппы, её прошлый айди: {old_chat_id} теперь "
-                            f"недействителен, меняем на новый айди: {new_chat_id}")
+            logging.warning(
+                    f"Группа <{chat.name}> была повышена до супергруппы, её прошлый айди: {old_chat_id} теперь "
+                    f"недействителен, меняем на новый айди: {new_chat_id}")
             await session.commit()
         except NoResultFound:
             logging.error(
@@ -172,6 +196,9 @@ async def migration_to_supergroup_handler(message: Message, bot: Bot, db_session
 
 @router.my_chat_member(F.new_chat_member.status == 'left')
 async def another_left_chat_handler(chat_member: ChatMemberUpdated, bot: Bot, db_session: sessionmaker):
+    """
+    Событийный хендлер при полном удалении группы с ботом
+    """
     if chat_member.new_chat_member.user.id != bot.id:
         return
 

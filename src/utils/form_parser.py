@@ -9,6 +9,9 @@ def reformat_str(string):
 
 
 def create_message_text(form_data):
+    """
+    Парсер данных формы
+    """
     form_data = MultiDict(form_data)
     created_at = datetime.fromtimestamp(int(form_data["created_at"]) / 1e3)
     del form_data["created_at"]

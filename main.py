@@ -67,6 +67,6 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        run_app(main(), host="127.0.0.1", port=8081)
+        run_app(main(), host="bot", port=8081)
     except (KeyboardInterrupt, SystemExit):
         logging.error("Bot stopped!")

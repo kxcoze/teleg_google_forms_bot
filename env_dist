@@ -1,12 +1,14 @@
 # rename this file to .env (with the leading dot) and place it next to docker-compose.yml
 BOT_TOKEN=123456789:AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQq
-ADMIN_IDS=[12345678, 987654321]
+ADMIN_IDS=[12345678,987654321]
+EMAIL=example@gmail.com
 GOOGLE_SECURITY_TOKEN=ars123454321sra
 TELEGRAM_SECURITY_TOKEN=secret
 APP_BASE_URL=https://example.com
-DB_NAME=db_name
+DB_NAME=db
 PROJECT_FIELD=Проект
 USERNAME_FIELD=ФИО
+EXPIRES_DAYS=30
 RABBITMQ_USER=rabbit_user
 RABBITMQ_PASSWORD=rabbit_pass
 RABBITMQ_VHOST=rabbit_vhost

@@ -5,11 +5,19 @@ from aiogram import types
 from aiogram.filters.callback_data import CallbackData
 from async_property import async_property
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 from db.models import Form
 
 
 class FormCallbackData(CallbackData, prefix="page"):
+    """
+    1) name - Имя данных
+    2) form_id - Айди отчета в бд
+    3) page_num - Номер страницы
+    4) pos - Номер отчета при показе пагинации
+    5) action - Строка действия
+    """
     name: str
     form_id: int | None
     page_num: int
@@ -19,6 +27,9 @@ class FormCallbackData(CallbackData, prefix="page"):
 
 
 class Pagination:
+    """
+    Класс реализующий интерфейс просмотра данных в формате пагинации.
+    """
     WIDTH = 5
 
     def __init__(self, db_session):
@@ -26,6 +37,10 @@ class Pagination:
 
     @async_property
     async def pages(self):
+        """
+        Асинхронное вычисляемое свойство для взятия списка всех отчетов
+        до 300-х включительно.
+        """
         async with self.db_session() as session:
             rows = await session.execute(
                 select(Form)
@@ -37,6 +52,9 @@ class Pagination:
         return forms
 
     async def search_nonempty_page(self, left, right, cur_page=0):
+        """
+        Поиск непустой страницы пагинации.
+        """
         searched_page = cur_page
         pages = await self.pages
         while searched_page > 0 and not pages[left:right]:
@@ -47,16 +65,20 @@ class Pagination:
         return left, right, searched_page
 
     async def show_page(self, cur_page=0):
+        """
+        Показ определенной страницы пагинации.
+        """
         menu = []
         left = cur_page * self.WIDTH
         right = cur_page * self.WIDTH + self.WIDTH
         pages = (await self.pages)[left:right]
         if not pages:
+            # Если страниц на данной странице нет, то ищем предыдущие
             left, right, cur_page = await self.search_nonempty_page(
                 left, right, cur_page
             )
         if cur_page > 0:
-            # Added button for back listing
+            # Добавление кнопки для перехода на предыдущую страницу пагинации
             menu.append(
                 types.InlineKeyboardButton(
                     text="«",
@@ -71,6 +93,7 @@ class Pagination:
             )
         pages = await self.pages
         if pages:
+            # Формирование контента страницы
             text = "<b>Отчеты</b>\n"
             forms = pages[left:right]
             for pos, form in enumerate(forms, start=left + 1):
@@ -99,7 +122,7 @@ class Pagination:
             text = "Список отчетов пуст."
 
         if right < len(pages):
-            # Added button for forward listing
+            # Добавление кнопки для перехода на следующую страницу пагинации
             menu.append(
                 types.InlineKeyboardButton(
                     text="»",
@@ -118,9 +141,13 @@ class Pagination:
         return text, markup
 
     async def view_data_element(self, cur_page: int, form_id: int, pos: int):
+        """
+        Поиск отчета с айди равным `form_id`
+        """
         async with self.db_session() as session:
             form = await session.get(Form, form_id)
-
+        if not form:
+            raise NoResultFound("Данный отчет не был найден.")
         text = "".join(f"№ {pos}\n" f"{form.content}")
 
         button = types.InlineKeyboardButton(
@@ -137,16 +164,3 @@ class Pagination:
         markup = types.InlineKeyboardMarkup(inline_keyboard=[[button]])
         return text, markup
 
-    @staticmethod
-    def back_to_main(cur_page, book):
-        markup = types.InlineKeyboardMarkup()
-
-        markup.add(
-            types.InlineKeyboardButton(
-                text="« Вернуться назад",
-                callback_data=FormCallbackData(
-                    name=book, form_id=None, page_num=cur_page, pos=None, action="main"
-                ).pack(),
-            ),
-        )
-        return markup

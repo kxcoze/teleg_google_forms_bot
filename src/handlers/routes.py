@@ -15,13 +15,15 @@ from src.config import config
 
 @api_authentication
 async def receive_form_data_handler(request: Request):
+    """
+    Консумер данных форм, которые приходят из Google Forms
+    """
     bot: Bot = request.app["bot"]
     db_session: sessionmaker = request.app["db_session"]
 
     data = await request.post()
 
     create_message_text(data)
-    # Попытка отправить сообщение в чат
     project_name = data[config.PROJECT_FIELD].strip()
     username = data[config.USERNAME_FIELD].strip()
     msg = create_message_text(data)
@@ -50,6 +52,7 @@ async def receive_form_data_handler(request: Request):
             )
 
         try:
+            # Попытка отправить сообщение в чат
             sent_message = await bot.send_message(text=msg, chat_id=chat_id)
         except Exception as e:  # При попытке отправить в чат произошла ошибка
             await session.merge(
@@ -65,7 +68,7 @@ async def receive_form_data_handler(request: Request):
                 {"ok": False, "err": f"Cannot complete the request because: {e}"},
                 status=500,
             )
-        # Сообщение успешно отправлено.
+        # Сообщение успешно отправлено, фиксируем изменения
         await session.merge(
             Form(
                 status=1,
@@ -80,3 +83,4 @@ async def receive_form_data_handler(request: Request):
         f"Отчет пользователя <{username}> был успешно отправлен в <{project_name}>!"
     )
     return json_response({"ok": True}, status=200)
+
