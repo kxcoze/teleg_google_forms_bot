@@ -18,6 +18,7 @@ def create_message_text(form_data):
 
     msg = ["<b>Отчет</b>", f"Отметка времени: <b>{created_at.strftime('%H:%M:%S')}</b>"]
     for key, value in form_data.items():
+        if not value.strip(): continue
         key, value = reformat_str(key), reformat_str(value)
         msg.append(f"{key}: {f'<b>{value}</b>' if value else '<em>Пусто</em>'}")
     return "\n".join(msg)
