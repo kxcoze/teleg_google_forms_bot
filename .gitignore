@@ -140,3 +140,6 @@ dump.rdb
 *.bak
 *.dat
 *.dir
+
+# Nginx config
+.conf
