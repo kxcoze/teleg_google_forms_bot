@@ -7,7 +7,7 @@ from aiohttp.web_app import Application
 from aiogram import Bot
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram.types import BotCommand
-from aiogram.types.bot_command_scope import BotCommandScopeDefault
+from aiogram.types.bot_command_scope_default import BotCommandScopeDefault
 
 from src.handlers.commands import router
 from src.handlers.callbacks import callback_router
