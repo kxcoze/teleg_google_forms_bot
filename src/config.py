@@ -14,7 +14,6 @@ class Config(BaseSettings):
     TELEGRAM_SECURITY_TOKEN: str = Field(...)
     GOOGLE_SECURITY_TOKEN: str = Field(...)
     ADMIN_IDS: List = Field(...)
-    EMAIL: str = Field(...)
     DB_NAME: str = Field(...)
     APP_BASE_URL: str = Field(...)
     PROJECT_FIELD: str = Field(...)

@@ -1,11 +1,13 @@
 import logging
 import logging.config
 
+import aiolog
 from aiohttp.web import run_app
 from aiohttp.web_app import Application
 from aiogram import Bot
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-import aiolog
+from aiogram.types import BotCommand
+from aiogram.types.bot_command_scope import BotCommandScopeDefault
 
 from src.handlers.commands import router
 from src.handlers.callbacks import callback_router
@@ -35,6 +37,17 @@ async def db_init():
             await session.commit()
 
 
+async def set_bot_commands(bot: Bot):
+    commands = [
+        BotCommand(command="help", description="Проcмотр всех доcтупных команд"),
+        BotCommand(command="admins", description="Просмотр всех администраторов бота"),
+        BotCommand(command="groups", description="Просмотр групп, где состоит бот"),
+        BotCommand(command="reports", description="Интерфейс для просмотра последних отчетов")
+    ]
+
+    await bot.set_my_commands(commands=commands, scope=BotCommandScopeDefault())
+
+
 async def notify_admins():
     for admin in config.ADMIN_IDS:
         await bot.send_message(admin, "<code>Бот запущен</code>")
@@ -48,6 +61,7 @@ async def main():
     dispatcher.startup.register(on_startup)
 
     dispatcher.include_routers(router, callback_router)
+    await set_bot_commands(bot)
 
     app = Application()
     app["bot"] = bot

@@ -1,7 +1,6 @@
 # rename this file to .env (with the leading dot) and place it next to docker-compose.yml
 BOT_TOKEN=123456789:AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQq
 ADMIN_IDS=[12345678,987654321]
-EMAIL=example@gmail.com
 GOOGLE_SECURITY_TOKEN=ars123454321sra
 TELEGRAM_SECURITY_TOKEN=secret
 APP_BASE_URL=https://example.com
