@@ -18,6 +18,7 @@ class FormCallbackData(CallbackData, prefix="page"):
     4) pos - Номер отчета при показе пагинации
     5) action - Строка действия
     """
+
     name: str
     form_id: int | None
     page_num: int
@@ -30,6 +31,7 @@ class Pagination:
     """
     Класс реализующий интерфейс просмотра данных в формате пагинации.
     """
+
     WIDTH = 5
 
     def __init__(self, db_session):
@@ -163,4 +165,3 @@ class Pagination:
 
         markup = types.InlineKeyboardMarkup(inline_keyboard=[[button]])
         return text, markup
-

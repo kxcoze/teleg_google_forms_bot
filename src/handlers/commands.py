@@ -22,8 +22,10 @@ async def command_start(message: Message, db_session: sessionmaker):
         user: User = await session.get(User, message.chat.id)
         additional_message = ""
         if user and user.is_staff:
-            additional_message = ("<b>Вы админ данного бота!</b>\n"
-                                  "/help - посмотреть список доступных команд для Вас.")
+            additional_message = (
+                "<b>Вы админ данного бота!</b>\n"
+                "/help - посмотреть список доступных команд для Вас."
+            )
 
     await message.answer(
         f"""Привет!\nВаш айди: <b>{message.chat.id}</b>\n{additional_message}\n"""
@@ -95,7 +97,7 @@ async def joined_chat_handler(
     Событийный хендлер для добавления данных группы в БЛ при входе бота в группу или
     при создании группы с ботом
     """
-    if hasattr(message, 'new_chat_member') and message.new_chat_member["id"] != bot.id:
+    if hasattr(message, "new_chat_member") and message.new_chat_member["id"] != bot.id:
         return
 
     chat_id = message.chat.id
@@ -139,9 +141,7 @@ async def left_chat_handler(
 
 
 @router.message(F.new_chat_title)
-async def new_chat_handler(
-    message: Message, bot: Bot, db_session: sessionmaker
-) -> Any:
+async def new_chat_handler(message: Message, bot: Bot, db_session: sessionmaker) -> Any:
     """
     Событийный хендлер для отслеживания изменения названия группы
     """
@@ -153,7 +153,8 @@ async def new_chat_handler(
             row = await session.execute(select(Chat).where(Chat.id == chat_id))
             chat = row.scalar_one()
             logging.warning(
-                    f"Группа <{chat.name}> с айди: {chat_id} поменяла название на <{message.new_chat_title}>")
+                f"Группа <{chat.name}> с айди: {chat_id} поменяла название на <{message.new_chat_title}>"
+            )
             chat.name = message.new_chat_title
             await session.commit()
         except NoResultFound:
@@ -170,7 +171,9 @@ async def new_chat_handler(
 
 
 @router.message(F.migrate_to_chat_id)
-async def migration_to_supergroup_handler(message: Message, bot: Bot, db_session: sessionmaker):
+async def migration_to_supergroup_handler(
+    message: Message, bot: Bot, db_session: sessionmaker
+):
     """
     Событийный хендлер для отслеживания миграции группы в супергруппу
     """
@@ -181,8 +184,9 @@ async def migration_to_supergroup_handler(message: Message, bot: Bot, db_session
             chat = await session.get(Chat, old_chat_id)
             chat.id = new_chat_id
             logging.warning(
-                    f"Группа <{chat.name}> была повышена до супергруппы, её прошлый айди: {old_chat_id} теперь "
-                    f"недействителен, меняем на новый айди: {new_chat_id}")
+                f"Группа <{chat.name}> была повышена до супергруппы, её прошлый айди: {old_chat_id} теперь "
+                f"недействителен, меняем на новый айди: {new_chat_id}"
+            )
             await session.commit()
         except NoResultFound:
             logging.error(
@@ -190,12 +194,16 @@ async def migration_to_supergroup_handler(message: Message, bot: Bot, db_session
                 f"странно, на всякий случай добавим эту группу в базу данных под новым айди: {new_chat_id}"
             )
             chat_link = f"https://t.me/c/{str(new_chat_id)[4:]}"
-            await session.merge(Chat(id=new_chat_id, name=message.chat.title, link=chat_link))
+            await session.merge(
+                Chat(id=new_chat_id, name=message.chat.title, link=chat_link)
+            )
             await session.commit()
 
 
-@router.my_chat_member(F.new_chat_member.status == 'left')
-async def another_left_chat_handler(chat_member: ChatMemberUpdated, bot: Bot, db_session: sessionmaker):
+@router.my_chat_member(F.new_chat_member.status == "left")
+async def another_left_chat_handler(
+    chat_member: ChatMemberUpdated, bot: Bot, db_session: sessionmaker
+):
     """
     Событийный хендлер при полном удалении группы с ботом
     """
@@ -217,4 +225,3 @@ async def another_left_chat_handler(chat_member: ChatMemberUpdated, bot: Bot, db
                 f"В базе данных нет информации о групповом чате <{chat_title}> с айди: {chat_id}, "
                 f"пропускаем удаление информации о чате."
             )
-

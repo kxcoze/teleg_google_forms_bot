@@ -42,7 +42,9 @@ async def set_bot_commands(bot: Bot):
         BotCommand(command="help", description="Проcмотр всех доcтупных команд"),
         BotCommand(command="admins", description="Просмотр всех администраторов бота"),
         BotCommand(command="groups", description="Просмотр групп, где состоит бот"),
-        BotCommand(command="reports", description="Интерфейс для просмотра последних отчетов")
+        BotCommand(
+            command="reports", description="Интерфейс для просмотра последних отчетов"
+        ),
     ]
 
     await bot.set_my_commands(commands=commands, scope=BotCommandScopeDefault())

@@ -50,12 +50,16 @@ async def query_show_report_info(
         await query.answer()
     except NoResultFound:
         logging.error("Такого отчета не существует.")
-        await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+        await bot.delete_message(
+            chat_id=query.message.chat.id, message_id=query.message.message_id
+        )
         await query.answer("Такого отчета не существует.")
     except:
         logging.exception(
             "Something went wrong with showing report info "
             f"user ID:[{query.message.chat.id}]"
         )
-        await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+        await bot.delete_message(
+            chat_id=query.message.chat.id, message_id=query.message.message_id
+        )
         await query.answer("Произошла непредвиденная ошибка.")

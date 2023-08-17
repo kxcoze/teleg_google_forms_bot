@@ -12,16 +12,15 @@ from db.models import Form, Chat
 
 
 async def send_error_message_admins(msg):
-    msg = ''.join(['<code>ERROR — </code>', msg])
+    msg = "".join(["<code>ERROR — </code>", msg])
     for admin in config.ADMIN_IDS:
         await bot.send_message(admin, msg)
 
 
 async def send_warning_message_admins(msg):
-    msg = ''.join(['<code>WARNING — </code>', msg])
+    msg = "".join(["<code>WARNING — </code>", msg])
     for admin in config.ADMIN_IDS:
         await bot.send_message(admin, msg)
-
 
 
 async def send_not_delivered_messages():
@@ -79,7 +78,11 @@ async def send_not_delivered_messages():
 
 async def clear_old_forms():
     async with db_session() as session:
-        rows = await session.execute(select(Form).where(Form.created_at >= datetime.now() + timedelta(days=config.EXPIRES_DAYS)))
+        rows = await session.execute(
+            select(Form).where(
+                Form.created_at >= datetime.now() + timedelta(days=config.EXPIRES_DAYS)
+            )
+        )
         forms = rows.scalars().all()
         if not forms:
             logging.warning(
@@ -92,11 +95,12 @@ async def clear_old_forms():
             await session.delete(form)
         await session.commit()
 
-    await send_warning_message_admins(f"Были успешно удалены устаревшие на <b>{config.EXPIRES_DAYS}</b> дней отчеты в количестве: <b>{cnt}</b>")
+    await send_warning_message_admins(
+        f"Были успешно удалены устаревшие на <b>{config.EXPIRES_DAYS}</b> дней отчеты в количестве: <b>{cnt}</b>"
+    )
     logging.warning(
         f"{cnt} forms have been successfully deleted due to obsolescence from db."
     )
-
 
 
 @app.task

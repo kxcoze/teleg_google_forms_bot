@@ -83,4 +83,3 @@ async def receive_form_data_handler(request: Request):
         f"Отчет пользователя <{username}> был успешно отправлен в <{project_name}>!"
     )
     return json_response({"ok": True}, status=200)
-
