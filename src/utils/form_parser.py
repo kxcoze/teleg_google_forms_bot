@@ -1,6 +1,9 @@
 from datetime import datetime
 
+import pytz
 from multidict import MultiDict
+
+from src.config import config
 
 
 def reformat_str(string):
@@ -13,10 +16,10 @@ def create_message_text(form_data):
     Парсер данных формы
     """
     form_data = MultiDict(form_data)
-    created_at = datetime.fromtimestamp(int(form_data["created_at"]) / 1e3)
+    created_at = datetime.fromtimestamp(int(form_data["created_at"]) / 1e3, pytz.timezone(config.TIMEZONE))
     del form_data["created_at"]
 
-    msg = ["<b>Отчет</b>", f"Отметка времени: <b>{created_at.strftime('%H:%M:%S')}</b>"]
+    msg = ["<b>Отчет</b>", f"Отметка времени: <b>{created_at.strftime('%H:%M:%S, %d/%m/%Y')}</b>"]
     for key, value in form_data.items():
         if not value.strip():
             continue

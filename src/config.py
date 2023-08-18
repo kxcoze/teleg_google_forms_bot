@@ -19,6 +19,7 @@ class Config(BaseSettings):
     PROJECT_FIELD: str = Field(...)
     USERNAME_FIELD: str = Field(...)
     EXPIRES_DAYS: int = Field(...)
+    TIMEZONE: str = Field(...)
     RABBITMQ_USER: str = Field(...)
     RABBITMQ_PASS: str = Field(...)
     RABBITMQ_VHOST: str = Field(...)

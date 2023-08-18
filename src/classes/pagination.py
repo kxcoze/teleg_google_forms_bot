@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from db.models import Form
+from src.config import config
 
 
 class FormCallbackData(CallbackData, prefix="page"):
@@ -101,7 +102,7 @@ class Pagination:
             for pos, form in enumerate(forms, start=left + 1):
                 formatted_time = pytz.utc.localize(
                     form.created_at, is_dst=None
-                ).astimezone(pytz.timezone("Europe/Moscow"))
+                ).astimezone(pytz.timezone(config.TIMEZONE))
                 text += (
                     f"№ {pos}\n"
                     f"ФИО: <b>{form.username}</b>\n"

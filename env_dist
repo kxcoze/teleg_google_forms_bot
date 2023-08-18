@@ -8,6 +8,7 @@ DB_NAME=db
 PROJECT_FIELD=Проект
 USERNAME_FIELD=ФИО
 EXPIRES_DAYS=30
+TIMEZONE=Europe/Moscow
 RABBITMQ_USER=rabbit_user
 RABBITMQ_PASS=rabbit_pass
 RABBITMQ_VHOST=rabbit_vhost
