@@ -15,17 +15,17 @@ services:
 
   bot: &bot
     <<: *base
-    expose:
-      - "8081"
+    ports:
+      - "127.0.0.1:8081:8081"
     entrypoint: ["docker/start.sh"]
     depends_on:
       - rabbitmq
 
   rabbitmq:
     image: 'bitnami/rabbitmq:latest'
-    expose:
-      - "5672"
-      - "15672"        
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "15672:15672"        
     environment:
       RABBITMQ_DEFAULT_USER: $RABBITMQ_USER
       RABBITMQ_DEFAULT_PASS: $RABBITMQ_PASS
