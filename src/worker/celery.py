@@ -16,7 +16,7 @@ celery_app.autodiscover_tasks()
 celery_app.conf.beat_schedule = {
     "add-every-5-minutes": {
         "task": "src.worker.tasks.test_task",
-        "schedule": crontab(minute="*/5", hour="6-23"),
+        "schedule": crontab(minute="*/15", hour="6-23"),
     },
     "add-every-monday-clear-old-reports": {
         "task": "src.worker.tasks.clear_old_forms_task",
