@@ -30,5 +30,5 @@ def create_message_text(form_data):
         if not value:
             continue
         key, value = reformat_str(key), reformat_str(value)
-        msg.append(f"{key}: '<b>{value}</b>'")
+        msg.append(f"{key}: <b>{value}</b>")
     return "\n".join(msg)
