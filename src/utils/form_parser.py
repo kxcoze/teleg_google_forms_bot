@@ -8,7 +8,7 @@ from src.config import config
 
 def reformat_str(string):
     # Изменить строку, чтобы парсер телеграма не ругался.
-    return string.replace("<", "&lt;").replace(">", "&gt;").strip()
+    return string.replace('<BR/>', '\n').replace("<", "&lt;").replace(">", "&gt;").strip()
 
 
 def create_message_text(form_data):
@@ -26,8 +26,9 @@ def create_message_text(form_data):
         f"Отметка времени: <b>{created_at.strftime('%H:%M:%S, %d/%m/%Y')}</b>",
     ]
     for key, value in form_data.items():
-        if not value.strip():
+        value = value.strip()
+        if not value:
             continue
         key, value = reformat_str(key), reformat_str(value)
-        msg.append(f"{key}: {f'<b>{value}</b>' if value else '<em>Пусто</em>'}")
+        msg.append(f"{key}: '<b>{value}</b>'")
     return "\n".join(msg)

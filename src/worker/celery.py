@@ -14,7 +14,7 @@ celery_app = Celery(
 )
 celery_app.autodiscover_tasks()
 celery_app.conf.beat_schedule = {
-    "add-every-5-minutes": {
+    "add-every-15-minutes": {
         "task": "src.worker.tasks.test_task",
         "schedule": crontab(minute="*/15", hour="6-23"),
     },
@@ -23,4 +23,4 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="0", hour="0", day_of_week="1"),
     },
 }
-celery_app.conf.update(timezone="Europe/Moscow")
+celery_app.conf.update(timezone=config.TIMEZONE)
